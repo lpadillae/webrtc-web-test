@@ -30,6 +30,48 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
       
+      <!-- ICE Server Configuration Panel -->
+      <section class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-xl flex flex-col lg:col-span-2">
+        <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path></svg>
+          ICE Server Configuration (Manual)
+        </h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 items-end">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">URL (stun: or turn:)</label>
+            <input type="text" id="inputUrl" placeholder="turn:example.com:3478" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">User (Optional)</label>
+            <input type="text" id="inputUser" placeholder="username" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+          </div>
+          <div class="flex gap-2">
+            <div class="flex-grow">
+              <label class="block text-xs font-medium text-slate-400 mb-1 uppercase tracking-wider">Pass (Optional)</label>
+              <input type="password" id="inputPass" placeholder="password" class="w-full bg-slate-900 border border-slate-700 rounded p-2 text-sm focus:ring-1 focus:ring-indigo-500 outline-none">
+            </div>
+            <button id="btnAddServer" title="Add Server" class="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded self-end transition-colors shadow-lg">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center bg-slate-900/50 p-3 rounded-lg border border-slate-700 mb-4">
+          <div class="flex items-center gap-4">
+            <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Transport Policy:</label>
+            <div class="flex bg-slate-800 p-1 rounded-md border border-slate-700">
+              <button id="policyAll" class="px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md">ALL</button>
+              <button id="policyRelay" class="px-4 py-1 text-xs font-bold rounded transition-all text-slate-400 hover:text-slate-200">RELAY ONLY</button>
+            </div>
+          </div>
+          <div id="serverListContainer" class="flex flex-wrap gap-2 flex-grow justify-end ml-4 min-h-[30px]">
+            <!-- Dynamic tags here -->
+            <div class="text-slate-500 text-xs italic">No manual servers added.</div>
+          </div>
+        </div>
+      </section>
+
       <!-- Network Analysis Panel -->
       <section class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-xl flex flex-col">
         <h2 class="text-xl font-semibold mb-4 flex py-1 items-center gap-2">
