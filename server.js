@@ -26,9 +26,9 @@ app.use(
       directives: {
         defaultSrc: ["'self'"],
         // Allow Tailwind CSS CDN, Socket.io UI
-        scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.tailwindcss.com"],
+        "script-src": ["'self'", "https://cdn.tailwindcss.com", "https://cdn.socket.io", "'unsafe-inline'"],
         // Allow WebRTC data channels, WebSockets
-        connectSrc: ["'self'", "ws:", "wss:", "stun:", "turn:"], 
+        "connect-src": ["'self'", "https:", "ws:", "wss:", "stun:", "turn:"],
         styleSrc: ["'self'", "'unsafe-inline'"]
       },
     },
