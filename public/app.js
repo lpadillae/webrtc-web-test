@@ -180,32 +180,40 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Media & Call Functions ---
   async function setupMedia() {
     if (!window.isSecureContext) {
-      logger.error('CRITICAL: WebRTC requires a secure context (HTTPS). Please access through your .up.railway.app domain.');
+      logger.error('CRITICAL: WebRTC requires a secure context (HTTPS).');
       alert('Secure context (HTTPS) required for media access.');
       return false;
     }
 
-    try {
-      const constraints = { 
-        video: { facingMode: 'user' }, // Prefer front-facing camera on mobile
-        audio: true 
-      };
-      
-      localStream = await navigator.mediaDevices.getUserMedia(constraints);
-      localVideo.srcObject = localStream;
-      logger.info('Camera (Front) and Microphone access granted.');
-      return true;
-    } catch (e) {
-      logger.error('Media Access Denied: ' + e.message);
-      if (e.name === 'NotAllowedError') {
-        alert('Permission was denied. Please allow camera access in your browser settings.');
-      } else if (e.name === 'NotFoundError') {
-        alert('No camera/microphone found on this device.');
-      } else {
-        alert('Error accessing media: ' + e.message);
+    const tryPatterns = [
+      { video: { facingMode: 'user' }, audio: true },
+      { video: true, audio: true },
+      { video: true }, // Try video only as last resort
+    ];
+
+    for (let pattern of tryPatterns) {
+      try {
+        logger.info(`Requesting media access with pattern: ${JSON.stringify(pattern)}...`);
+        localStream = await navigator.mediaDevices.getUserMedia(pattern);
+        localVideo.srcObject = localStream;
+        logger.info('Camera and Microphone access GRANTED.');
+        return true;
+      } catch (e) {
+        console.warn(`Pattern failed: ${JSON.stringify(pattern)}`, e);
+        if (pattern === tryPatterns[tryPatterns.length - 1]) {
+          logger.error('All media capture patterns FAILED: ' + e.message);
+          
+          if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+            alert('Permission Denied. Please check if your Browser OR Phone OS (iOS/Android) is blocking the camera for this site.');
+          } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+            alert('Camera is already in use by another application or tab.');
+          } else {
+            alert(`Error: ${e.message} (${e.name})`);
+          }
+        }
       }
-      return false;
     }
+    return false;
   }
 
   btnJoinRoom.onclick = async () => {
