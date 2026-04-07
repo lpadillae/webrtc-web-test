@@ -17,6 +17,25 @@ document.addEventListener('DOMContentLoaded', () => {
   const policyRelay = document.getElementById('policyRelay');
   let currentPolicy = 'all';
 
+  // Device Detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  logger.info(`Device: ${isMobile ? 'MOBILE' : 'DESKTOP'} detected. Browser: ${navigator.userAgent.split(' ').pop()}`);
+  if (!window.isSecureContext) {
+    logger.warn('NON-SECURE CONTEXT: WebRTC will likely fail. Use HTTPS.');
+  }
+
+  async function checkDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      logger.info(`Hardware Found: ${videoDevices.length} camera(s), ${devices.filter(d => d.kind === 'audioinput').length} mic(s).`);
+      videoDevices.forEach((d, i) => logger.info(`Cam ${i+1}: ${d.label || 'ID:' + d.deviceId.slice(0,8)}`));
+    } catch (e) {
+      logger.warn('Could not enumerate devices: ' + e.message);
+    }
+  }
+  checkDevices();
+
   policyAll.onclick = () => {
     currentPolicy = 'all';
     policyAll.className = 'px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md';
@@ -201,14 +220,17 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (e) {
         console.warn(`Pattern failed: ${JSON.stringify(pattern)}`, e);
         if (pattern === tryPatterns[tryPatterns.length - 1]) {
-          logger.error('All media capture patterns FAILED: ' + e.message);
+          logger.error(`PERM FAIL: ${e.name} - ${e.message}`);
+          logger.info(`Context: ${isMobile ? 'MOBILE' : 'DESKTOP'} | HTTPS: ${window.isSecureContext}`);
           
           if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-            alert('Permission Denied. Please check if your Browser OR Phone OS (iOS/Android) is blocking the camera for this site.');
+            alert('PERMISO DENEGADO: El navegador o el sistema operativo están bloqueando el acceso. \n\nTips:\n1. Revisa Ajustes > Privacidad > Cámara en tu teléfono.\n2. Asegúrate de que ninguna otra pestaña o app (WhatsApp, etc) esté usando la cámara.');
           } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
-            alert('Camera is already in use by another application or tab.');
+            alert('CÁMARA OCUPADA: La cámara está siendo usada por otra aplicación. Ciérrala y reintenta.');
+          } else if (e.name === 'OverconstrainedError') {
+            alert('HARDWARE NO COMPATIBLE: El modo solicitado (frontal) no está disponible. Intentando modo por defecto.');
           } else {
-            alert(`Error: ${e.message} (${e.name})`);
+            alert(`Error de Hardware: ${e.message} (${e.name})`);
           }
         }
       }
