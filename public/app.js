@@ -17,39 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const policyRelay = document.getElementById('policyRelay');
   let currentPolicy = 'all';
 
-  // Device Detection
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-  logger.info(`Device: ${isMobile ? 'MOBILE' : 'DESKTOP'} detected. Browser: ${navigator.userAgent.split(' ').pop()}`);
-  if (!window.isSecureContext) {
-    logger.warn('NON-SECURE CONTEXT: WebRTC will likely fail. Use HTTPS.');
-  }
-
-  async function checkDevices() {
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const videoDevices = devices.filter(d => d.kind === 'videoinput');
-      logger.info(`Hardware Found: ${videoDevices.length} camera(s), ${devices.filter(d => d.kind === 'audioinput').length} mic(s).`);
-      videoDevices.forEach((d, i) => logger.info(`Cam ${i+1}: ${d.label || 'ID:' + d.deviceId.slice(0,8)}`));
-    } catch (e) {
-      logger.warn('Could not enumerate devices: ' + e.message);
-    }
-  }
-  checkDevices();
-
-  policyAll.onclick = () => {
-    currentPolicy = 'all';
-    policyAll.className = 'px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md';
-    policyRelay.className = 'px-4 py-1 text-xs font-bold rounded transition-all text-slate-400 hover:text-slate-200';
-    logger.info('ICE Transport Policy changed to: ALL');
-  };
-
-  policyRelay.onclick = () => {
-    currentPolicy = 'relay';
-    policyRelay.className = 'px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md';
-    policyAll.className = 'px-4 py-1 text-xs font-bold rounded transition-all text-slate-400 hover:text-slate-200';
-    logger.info('ICE Transport Policy changed to: RELAY ONLY');
-  };
-
   class Logger {
     constructor() {
       this.lines = [];
@@ -93,6 +60,40 @@ document.addEventListener('DOMContentLoaded', () => {
   } catch (e) {
     console.error('Failed to load storage', e);
   }
+
+  // Device Detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  logger.info(`Device: ${isMobile ? 'MOBILE' : 'DESKTOP'} detected. Browser: ${navigator.userAgent.split(' ').pop()}`);
+  if (!window.isSecureContext) {
+    logger.warn('NON-SECURE CONTEXT: WebRTC will likely fail. Use HTTPS.');
+  }
+
+  async function checkDevices() {
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoDevices = devices.filter(d => d.kind === 'videoinput');
+      logger.info(`Hardware Found: ${videoDevices.length} camera(s), ${devices.filter(d => d.kind === 'audioinput').length} mic(s).`);
+      videoDevices.forEach((d, i) => logger.info(`Cam ${i+1}: ${d.label || 'ID:' + d.deviceId.slice(0,8)}`));
+    } catch (e) {
+      logger.warn('Could not enumerate devices: ' + e.message);
+    }
+  }
+  checkDevices();
+
+  policyAll.onclick = () => {
+    currentPolicy = 'all';
+    policyAll.className = 'px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md';
+    policyRelay.className = 'px-4 py-1 text-xs font-bold rounded transition-all text-slate-400 hover:text-slate-200';
+    logger.info('ICE Transport Policy changed to: ALL');
+  };
+
+  policyRelay.onclick = () => {
+    currentPolicy = 'relay';
+    policyRelay.className = 'px-4 py-1 text-xs font-bold rounded transition-all bg-indigo-600 text-white shadow-md';
+    policyAll.className = 'px-4 py-1 text-xs font-bold rounded transition-all text-slate-400 hover:text-slate-200';
+    logger.info('ICE Transport Policy changed to: RELAY ONLY');
+  };
+
 
   function renderServerList() {
     if (customServers.length === 0) {
