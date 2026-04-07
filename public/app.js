@@ -154,8 +154,16 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- End Manual Server Management ---
 
   btnExport.addEventListener('click', () => logger.exportTxt());
-
-  const socket = io();
+ 
+  // --- Signaling Bridge Connection ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const signalingUrl = urlParams.get('signaling');
+  
+  const socket = signalingUrl ? io(signalingUrl) : io();
+  if (signalingUrl) {
+    logger.info(`SIGNALING BRIDGE: Connecting to external server: ${signalingUrl}`);
+  }
+  
   socket.on('connect', () => logger.info(`Socket.io connected: ${socket.id}`));
   socket.on('connect_error', () => logger.warn('Socket.io connection failed. Testing only ICE/WebRTC.'));
 
