@@ -179,14 +179,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // --- Media & Call Functions ---
   async function setupMedia() {
+    if (!window.isSecureContext) {
+      logger.error('CRITICAL: WebRTC requires a secure context (HTTPS). Please access through your .up.railway.app domain.');
+      alert('Secure context (HTTPS) required for media access.');
+      return false;
+    }
+
     try {
-      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      const constraints = { 
+        video: { facingMode: 'user' }, // Prefer front-facing camera on mobile
+        audio: true 
+      };
+      
+      localStream = await navigator.mediaDevices.getUserMedia(constraints);
       localVideo.srcObject = localStream;
-      logger.info('Camera and Microphone access granted.');
+      logger.info('Camera (Front) and Microphone access granted.');
       return true;
     } catch (e) {
       logger.error('Media Access Denied: ' + e.message);
-      alert('Camera/Mic access is required for the call.');
+      if (e.name === 'NotAllowedError') {
+        alert('Permission was denied. Please allow camera access in your browser settings.');
+      } else if (e.name === 'NotFoundError') {
+        alert('No camera/microphone found on this device.');
+      } else {
+        alert('Error accessing media: ' + e.message);
+      }
       return false;
     }
   }
