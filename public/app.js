@@ -139,6 +139,157 @@ document.addEventListener('DOMContentLoaded', () => {
   socket.on('connect', () => logger.info(`Socket.io connected: ${socket.id}`));
   socket.on('connect_error', () => logger.warn('Socket.io connection failed. Testing only ICE/WebRTC.'));
 
+  // Video Call Elements
+  const inputRoom = document.getElementById('inputRoom');
+  const btnJoinRoom = document.getElementById('btnJoinRoom');
+  const btnHangUp = document.getElementById('btnHangUp');
+  const localVideo = document.getElementById('localVideo');
+  const remoteVideo = document.getElementById('remoteVideo');
+  const videoPlaceholder = document.getElementById('videoPlaceholder');
+
+  let localStream = null;
+  let roomName = null;
+
+  // --- Signaling Handlers ---
+  socket.on('user-joined', async (data) => {
+    logger.info(`Peer joined room: ${data.socketId}. Initiating offer...`);
+    // If I'm the first one, I initiate the offer
+    initiateCall();
+  });
+
+  socket.on('offer', async (data) => {
+    logger.info('Received offer from peer. Creating answer...');
+    await handleOffer(data.offer);
+  });
+
+  socket.on('answer', async (data) => {
+    logger.info('Received answer from peer. Finalizing connection...');
+    await handleAnswer(data.answer);
+  });
+
+  socket.on('ice-candidate', async (data) => {
+    if (pc) {
+      try {
+        await pc.addIceCandidate(new RTCIceCandidate(data.candidate));
+      } catch (e) {
+        logger.error('Error adding remote candidate: ' + e.message);
+      }
+    }
+  });
+
+  // --- Media & Call Functions ---
+  async function setupMedia() {
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+      localVideo.srcObject = localStream;
+      logger.info('Camera and Microphone access granted.');
+      return true;
+    } catch (e) {
+      logger.error('Media Access Denied: ' + e.message);
+      alert('Camera/Mic access is required for the call.');
+      return false;
+    }
+  }
+
+  btnJoinRoom.onclick = async () => {
+    roomName = inputRoom.value.trim();
+    if (!roomName) {
+      alert('Please enter a room name.');
+      return;
+    }
+
+    const mediaOk = await setupMedia();
+    if (!mediaOk) return;
+
+    socket.emit('join', roomName);
+    logger.info(`Searching for peers in room: ${roomName}...`);
+    
+    btnJoinRoom.classList.add('hidden');
+    inputRoom.classList.add('hidden');
+    btnHangUp.classList.remove('hidden');
+  };
+
+  btnHangUp.onclick = () => {
+    if (pc) {
+      pc.close();
+      pc = null;
+    }
+    if (localStream) {
+      localStream.getTracks().forEach(t => t.stop());
+      localStream = null;
+    }
+    localVideo.srcObject = null;
+    remoteVideo.srcObject = null;
+    videoPlaceholder.classList.remove('hidden');
+    
+    btnHangUp.classList.add('hidden');
+    btnJoinRoom.classList.remove('hidden');
+    inputRoom.classList.remove('hidden');
+    logger.info('Call ended.');
+  };
+
+  async function initiateCall() {
+    createPeerConnection();
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    socket.emit('offer', { offer, room: roomName });
+  }
+
+  async function handleOffer(offer) {
+    createPeerConnection();
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    socket.emit('answer', { answer, room: roomName });
+  }
+
+  async function handleAnswer(answer) {
+    if (!pc) return;
+    await pc.setRemoteDescription(new RTCSessionDescription(answer));
+  }
+
+  function createPeerConnection() {
+    // Determine servers (Priority: custom manual servers)
+    const iceServers = customServers.length > 0 ? customServers : [];
+    if (iceServers.length === 0) {
+        logger.warn('No ICE servers configured. Call might fail if peers are behind restricted NATs.');
+    } else {
+        logger.info(`Initializing P2P connection with ${iceServers.length} servers...`);
+    }
+
+    const rtcConfig = { 
+        iceServers, 
+        iceTransportPolicy: currentPolicy,
+        iceCandidatePoolSize: 0 
+    };
+
+    pc = new RTCPeerConnection(rtcConfig);
+
+    // Add local tracks
+    if (localStream) {
+      localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+    }
+
+    pc.onicecandidate = (event) => {
+      if (event.candidate) {
+        socket.emit('ice-candidate', { candidate: event.candidate, room: roomName });
+      }
+    };
+
+    pc.ontrack = (event) => {
+      logger.info('Remote stream received! Rendering video...');
+      videoPlaceholder.classList.add('hidden');
+      remoteVideo.srcObject = event.streams[0];
+    };
+
+    pc.onconnectionstatechange = () => {
+      logger.info(`WebRTC Connection State: ${pc.connectionState}`);
+      if (pc.connectionState === 'failed') {
+        logger.error('P2P Connection FAILED. Check CoTURN logs and network configurations.');
+      }
+    };
+  }
+
   let pc = null;
 
   async function startDiagnostic() {

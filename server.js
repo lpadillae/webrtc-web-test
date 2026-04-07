@@ -51,9 +51,35 @@ app.get('/ice-config', (req, res) => {
 io.on('connection', (socket) => {
   console.log(`Client connected: ${socket.id}`);
   
-  // Real-time ping testing or signaling could be implemented here
-  socket.on('ping_test', (data, callback) => {
-    callback({ timestamp: Date.now() });
+  socket.on('join', (room) => {
+    socket.join(room);
+    console.log(`Socket ${socket.id} joined room ${room}`);
+    // Notify others in the room
+    socket.to(room).emit('user-joined', { socketId: socket.id });
+  });
+
+  socket.on('offer', (data) => {
+    // Forward offer to a specific target or room
+    socket.to(data.room).emit('offer', {
+      offer: data.offer,
+      from: socket.id
+    });
+  });
+
+  socket.on('answer', (data) => {
+    // Forward answer
+    socket.to(data.room).emit('answer', {
+      answer: data.answer,
+      from: socket.id
+    });
+  });
+
+  socket.on('ice-candidate', (data) => {
+    // Forward candidate
+    socket.to(data.room).emit('ice-candidate', {
+      candidate: data.candidate,
+      from: socket.id
+    });
   });
 
   socket.on('disconnect', () => {

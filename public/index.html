@@ -72,6 +72,37 @@
         </div>
       </section>
 
+      <!-- Video Call Interface Panel -->
+      <section class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-xl flex flex-col lg:col-span-2 overflow-hidden">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-semibold flex items-center gap-2">
+                <svg class="w-5 h-5 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                1-on-1 CoTURN Validation (Video Call)
+            </h2>
+            <div class="flex gap-2">
+                <input type="text" id="inputRoom" placeholder="Enter Room Name" class="bg-slate-900 border border-slate-700 rounded-md px-3 py-1.5 text-xs focus:ring-1 focus:ring-rose-500 outline-none w-32 md:w-48">
+                <button id="btnJoinRoom" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-1.5 rounded-md shadow-md transition-all">JOIN & CALL</button>
+                <button id="btnHangUp" class="hidden bg-slate-700 hover:bg-red-900 text-white text-xs font-bold px-4 py-1.5 rounded-md shadow-md transition-all">HANG UP</button>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="relative bg-slate-950 rounded-xl border border-slate-700 aspect-video overflow-hidden shadow-inner">
+                <video id="localVideo" autoplay playsinline muted class="w-full h-full object-cover"></video>
+                <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] uppercase font-bold text-slate-400 tracking-tighter border border-slate-700">Local Stream</div>
+            </div>
+            <div class="relative bg-slate-950 rounded-xl border border-slate-700 aspect-video overflow-hidden shadow-inner">
+                <video id="remoteVideo" autoplay playsinline class="w-full h-full object-cover"></video>
+                <div class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] uppercase font-bold text-rose-400 tracking-tighter border border-slate-700">Remote Participant</div>
+                <!-- Call overlay for loading or waiting -->
+                <div id="videoPlaceholder" class="absolute inset-0 flex flex-col items-center justify-center text-slate-600">
+                    <svg class="w-12 h-12 mb-2 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                    <p class="text-xs font-medium uppercase tracking-[0.2em] animate-pulse">Waiting for peer...</p>
+                </div>
+            </div>
+        </div>
+      </section>
+
       <!-- Network Analysis Panel -->
       <section class="bg-slate-800 rounded-xl border border-slate-700 p-6 shadow-xl flex flex-col">
         <h2 class="text-xl font-semibold mb-4 flex py-1 items-center gap-2">
